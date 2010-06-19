@@ -39,6 +39,14 @@ FROM=`basename "$FROMDIR"`
 TO="${FROM/ /\\ }.git"
 TODIR="$FROMDIR.git"
 
+# check whether we are in the root dir of a git-managed repository
+
+if [[ ! -d "$FROMDIR/.git" ]] ; then
+    echo "ERROR: Directory '$FROMDIR/.git' not found." >&2
+    echo "ERROR: '$FROMDIR' does not appear to be a git repository." >&2
+    exit 1
+fi
+
 git clone --bare "$FROMDIR" "$TODIR"
 REMOTE="$1"
 echo $REMOTE
