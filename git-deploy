@@ -27,6 +27,10 @@ done
 
 shift $(( $OPTIND - 1 ))
 
+# read arguments
+
+REMOTE="$1"
+echo $REMOTE
 
 if [[ -n "$2" ]] ; then
     BRANCH=$2
@@ -34,10 +38,14 @@ else
     BRANCH="origin"
 fi
 
+
+# deduce paths and repo names
+
 FROMDIR=`pwd`
 FROM=`basename "$FROMDIR"`
 TO="${FROM/ /\\ }.git"
 TODIR="$FROMDIR.git"
+
 
 # check whether we are in the root dir of a git-managed repository
 
@@ -47,12 +55,16 @@ if [[ ! -d "$FROMDIR/.git" ]] ; then
     exit 1
 fi
 
+
+# create a remote copy of the repo
+
 git clone --bare "$FROMDIR" "$TODIR"
-REMOTE="$1"
-echo $REMOTE
 scp -r "$TODIR" "$REMOTE"
 
 rm -rf "$TODIR"
+
+
+# save info about the remote repo
 
 git config remote.$BRANCH.url "$REMOTE/$TO"
 git config remote.$BRANCH.fetch "+refs/heads/*:refs/remotes/$BRANCH/*"
@@ -62,6 +74,9 @@ if [[ "$BRANCH" == "origin" ]] ; then
 fi
 
 git config branch.master.merge refs/heads/master
+
+
+# record auto push settings
 
 if [[ $AUTOPUSH == 1 ]] ; then
 	echo "Enablishing auto push on commit"
