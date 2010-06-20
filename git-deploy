@@ -73,6 +73,7 @@ fi
 
 # prepare the remote repo
 
+echo "Preparing the remote repo..."
 ssh "$SSH_HOST" "mkdir -p '$SSH_REMOTE_DIR' ; cd '$SSH_REMOTE_DIR' ; git init --bare"
 if [ ! $? -eq 0 ] ; then
 	echo "ERROR: Something went wrong during the remote repository setup!" >&2
@@ -94,6 +95,7 @@ git config branch.master.merge refs/heads/master
 
 # push a copy to the remote repo
 
+echo "First git push to $SSH_LOCATION..."
 git push $REMOTE
 
 
