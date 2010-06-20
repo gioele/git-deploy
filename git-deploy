@@ -103,5 +103,3 @@ if [ "$AUTOPUSH" = 'true' ] ; then
 		chmod +x "$hook_file"
 	fi
 fi
-
-exit;
