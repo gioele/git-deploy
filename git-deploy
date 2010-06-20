@@ -2,12 +2,6 @@
 
 USAGE="Usage: `basename $0` [-afh] sshpath [remotename]"
 
-# we want at least one parameter (it may be a flag or an argument)
-if [ $# -eq 0 ]; then
-	echo $USAGE >&2
-	exit 1
-fi
-
 AUTOPUSH='false'
 OVERWRITE_REMOTE='false'
 
@@ -29,6 +23,16 @@ while getopts afh OPT; do
 done
 
 shift $(( $OPTIND - 1 ))
+
+
+# check that at least the SSH path has been specified
+
+if [ $# -eq 0 ]; then
+	echo "ERROR: No sshpath specified" >&2
+	echo $USAGE >&2
+	exit 1
+fi
+
 
 # read arguments
 
