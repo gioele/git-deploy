@@ -93,8 +93,15 @@ git config branch.master.merge refs/heads/master
 
 if [ "$AUTOPUSH" = 'true' ] ; then
 	echo "Enablishing auto push on commit"
-	echo "git push $REMOTE" >> .git/hooks/post-commit
-	chmod +x .git/hooks/post-commit
+	auto_push_cmd="git push $REMOTE"
+	hook_file=".git/hooks/post-commit"
+	touch $hook_file
+	if grep -q "^$auto_push_cmd$" "$hook_file" ; then
+		echo "Autopush already configured for $REMOTE"
+	else
+		echo "$auto_push_cmd" >> "$hook_file"
+		chmod +x "$hook_file"
+	fi
 fi
 
 exit;
