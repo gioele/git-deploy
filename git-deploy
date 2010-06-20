@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USAGE="Usage: `basename $0` [-ah] sshpath [branchname]"
+USAGE="Usage: `basename $0` [-afh] sshpath [branchname]"
 
 # we want at least one parameter (it may be a flag or an argument)
 if [ $# -eq 0 ]; then
@@ -9,14 +9,17 @@ if [ $# -eq 0 ]; then
 fi
 
 AUTOPUSH=0
+OVERWRITE_REMOTE='false'
 
 # parse command line arguments
-while getopts ah OPT; do
+while getopts afh OPT; do
     case "$OPT" in
 	h)	echo $USAGE
 		exit 0
 		;;
 	a)	AUTOPUSH=1
+		;;
+	f)      OVERWRITE_REMOTE='true'
 		;;
 	\?)	# getopts issues an error message
 		echo $USAGE >&2
@@ -52,6 +55,18 @@ TODIR="$FROMDIR.git"
 if [[ ! -d "$FROMDIR/.git" ]] ; then
     echo "ERROR: Directory '$FROMDIR/.git' not found." >&2
     echo "ERROR: '$FROMDIR' does not appear to be a git repository." >&2
+    exit 1
+fi
+
+
+# check whether a remote with a similar name exists
+
+git remote | grep -q "^${BRANCH}$"
+remote_exists=$?
+
+if [ $remote_exists -eq 0 -a $OVERWRITE_REMOTE = 'false' ] ; then
+    echo "ERROR: Remote '$BRANCH' already defined."
+    echo "Use '-f' to force its replacement or use a different remote name" >&2
     exit 1
 fi
 
