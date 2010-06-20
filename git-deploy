@@ -102,7 +102,7 @@ git push $REMOTE
 # record auto push settings
 
 if [ "$AUTOPUSH" = 'true' ] ; then
-	echo "Enablishing auto push on commit"
+	echo "Enabling auto push on commit..."
 	auto_push_cmd="git push $REMOTE"
 	hook_file=".git/hooks/post-commit"
 	touch $hook_file
