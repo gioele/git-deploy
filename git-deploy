@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 USAGE="Usage: `basename $0` [-afh] sshpath [remotename]"
 
@@ -8,7 +8,7 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
-AUTOPUSH=0
+AUTOPUSH='false'
 OVERWRITE_REMOTE='false'
 
 # parse command line arguments
@@ -17,7 +17,7 @@ while getopts afh OPT; do
 	h)	echo $USAGE
 		exit 0
 		;;
-	a)	AUTOPUSH=1
+	a)	AUTOPUSH='true'
 		;;
 	f)      OVERWRITE_REMOTE='true'
 		;;
@@ -33,25 +33,20 @@ shift $(( $OPTIND - 1 ))
 # read arguments
 
 SSH_PATH="$1"
-
-if [[ -n "$2" ]] ; then
-    REMOTE=$2
-else
-    REMOTE="origin"
-fi
+REMOTE="${2:-origin}"
 
 
 # deduce paths and repo names
 
 SRC_DIR=`pwd`
 SRC_REPO_NAME=`basename "$SRC_DIR"`
-DEST_REPO_NAME="${SRC_REPO_NAME/ /\\ }.git"
+DEST_REPO_NAME="$SRC_REPO_NAME.git"
 DEST_DIR="$SRC_DIR.git"
 
 
 # check whether we are in the root dir of a git-managed repository
 
-if [[ ! -d "$SRC_DIR/.git" ]] ; then
+if [ ! -d "$SRC_DIR/.git" ] ; then
     echo "ERROR: Directory '$SRC_DIR/.git' not found." >&2
     echo "ERROR: '$SRC_DIR' does not appear to be a git repository." >&2
     exit 1
@@ -83,7 +78,7 @@ rm -rf "$DEST_DIR"
 git config remote.$REMOTE.url "$SSH_PATH/$DEST_REPO_NAME"
 git config remote.$REMOTE.fetch "+refs/heads/*:refs/remotes/$REMOTE/*"
 
-if [[ "$REMOTE" == "origin" ]] ; then
+if [ "$REMOTE" = "origin" ] ; then
 	git config branch.master.remote $REMOTE
 fi
 
@@ -92,7 +87,7 @@ git config branch.master.merge refs/heads/master
 
 # record auto push settings
 
-if [[ $AUTOPUSH == 1 ]] ; then
+if [ "$AUTOPUSH" = 'true' ] ; then
 	echo "Enablishing auto push on commit"
 	echo "git push $REMOTE" >> .git/hooks/post-commit
 	chmod +x .git/hooks/post-commit
