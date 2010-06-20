@@ -1,6 +1,6 @@
 #!/bin/sh
 
-USAGE="Usage: `basename $0` [-afh] sshpath [remotename]"
+USAGE="Usage: `basename $0` [-afh] user@host/path/ [remotename]"
 
 AUTOPUSH='false'
 OVERWRITE_REMOTE='false'
@@ -36,7 +36,7 @@ fi
 
 # read arguments
 
-SSH_PATH="$1"
+SSH_LOCATION="$1"
 REMOTE="${2:-origin}"
 
 
@@ -45,8 +45,10 @@ REMOTE="${2:-origin}"
 SRC_DIR=`pwd`
 SRC_REPO_NAME=`basename "$SRC_DIR"`
 DEST_REPO_NAME="$SRC_REPO_NAME.git"
-DEST_DIR="$SRC_DIR.git"
 
+SSH_HOST=`echo $SSH_LOCATION | cut -d '/' -f 1`
+SSH_BASE_DIR="/`echo $SSH_LOCATION | cut -d '/' -f 2-`"
+SSH_REMOTE_DIR="$SSH_BASE_DIR/$DEST_REPO_NAME"
 
 # check whether we are in the root dir of a git-managed repository
 
@@ -69,17 +71,18 @@ if [ $remote_exists -eq 0 -a $OVERWRITE_REMOTE = 'false' ] ; then
 fi
 
 
-# create a remote copy of the repo
+# prepare the remote repo
 
-git clone --bare "$SRC_DIR" "$DEST_DIR"
-scp -r "$DEST_DIR" "$SSH_PATH"
-
-rm -rf "$DEST_DIR"
+ssh "$SSH_HOST" "mkdir -p '$SSH_REMOTE_DIR' ; cd '$SSH_REMOTE_DIR' ; git init --bare"
+if [ ! $? -eq 0 ] ; then
+	echo "ERROR: Something went wrong during the remote repository setup!" >&2
+	exit 1
+fi
 
 
 # save info about the remote repo
 
-git config remote.$REMOTE.url "$SSH_PATH/$DEST_REPO_NAME"
+git config remote.$REMOTE.url "git+ssh://$SSH_LOCATION/$DEST_REPO_NAME"
 git config remote.$REMOTE.fetch "+refs/heads/*:refs/remotes/$REMOTE/*"
 
 if [ "$REMOTE" = "origin" ] ; then
@@ -87,6 +90,11 @@ if [ "$REMOTE" = "origin" ] ; then
 fi
 
 git config branch.master.merge refs/heads/master
+
+
+# push a copy to the remote repo
+
+git push $REMOTE
 
 
 # record auto push settings
