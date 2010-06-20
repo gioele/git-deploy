@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USAGE="Usage: `basename $0` [-afh] sshpath [branchname]"
+USAGE="Usage: `basename $0` [-afh] sshpath [remotename]"
 
 # we want at least one parameter (it may be a flag or an argument)
 if [ $# -eq 0 ]; then
@@ -32,13 +32,12 @@ shift $(( $OPTIND - 1 ))
 
 # read arguments
 
-REMOTE="$1"
-echo $REMOTE
+SSH_PATH="$1"
 
 if [[ -n "$2" ]] ; then
-    BRANCH=$2
+    REMOTE=$2
 else
-    BRANCH="origin"
+    REMOTE="origin"
 fi
 
 
@@ -61,11 +60,11 @@ fi
 
 # check whether a remote with a similar name exists
 
-git remote | grep -q "^${BRANCH}$"
+git remote | grep -q "^${REMOTE}$"
 remote_exists=$?
 
 if [ $remote_exists -eq 0 -a $OVERWRITE_REMOTE = 'false' ] ; then
-    echo "ERROR: Remote '$BRANCH' already defined."
+    echo "ERROR: Remote '$REMOTE' already defined."
     echo "Use '-f' to force its replacement or use a different remote name" >&2
     exit 1
 fi
@@ -74,18 +73,18 @@ fi
 # create a remote copy of the repo
 
 git clone --bare "$FROMDIR" "$TODIR"
-scp -r "$TODIR" "$REMOTE"
+scp -r "$TODIR" "$SSH_PATH"
 
 rm -rf "$TODIR"
 
 
 # save info about the remote repo
 
-git config remote.$BRANCH.url "$REMOTE/$TO"
-git config remote.$BRANCH.fetch "+refs/heads/*:refs/remotes/$BRANCH/*"
+git config remote.$REMOTE.url "$SSH_PATH/$TO"
+git config remote.$REMOTE.fetch "+refs/heads/*:refs/remotes/$REMOTE/*"
 
-if [[ "$BRANCH" == "origin" ]] ; then
-	git config branch.master.remote $BRANCH
+if [[ "$REMOTE" == "origin" ]] ; then
+	git config branch.master.remote $REMOTE
 fi
 
 git config branch.master.merge refs/heads/master
@@ -95,7 +94,7 @@ git config branch.master.merge refs/heads/master
 
 if [[ $AUTOPUSH == 1 ]] ; then
 	echo "Enablishing auto push on commit"
-	echo "git push $BRANCH" >> .git/hooks/post-commit
+	echo "git push $REMOTE" >> .git/hooks/post-commit
 	chmod +x .git/hooks/post-commit
 fi
 
